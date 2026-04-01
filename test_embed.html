@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Embed Test</title>
+<style>
+body { margin: 0; padding: 40px; font-family: sans-serif; background: #f0f0f0; }
+h1 { margin-bottom: 20px; }
+p { max-width: 600px; line-height: 1.6; }
+</style>
+</head>
+<body>
+<h1>Partner Widget Embed Test</h1>
+<p>This is a blank page with the partner widget embedded via the generated code snippet. The character should appear fixed at the bottom-left corner of the viewport.</p>
+
+<div id="mai-partner" style="position:fixed;bottom:0px;left:0px;z-index:9999"></div>
+<style>@media(max-width:768px){#mai-partner{display:none!important}}</style>
+<script type="module">
+import PartnerWidget from './maipartner.js';
+const widget = new PartnerWidget({
+    character: 'milk',
+    container: document.getElementById('mai-partner'),
+    basePath:  '.',
+    width:     300,
+});
+await widget.init();
+</script>
+</body>
+</html>

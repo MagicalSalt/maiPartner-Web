@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Partner Widget — Configuration</title>
+<style>
+:root { --bg: #1a1a2e; --panel: #16213e; --border: #334; --accent: #FFD700; --text: #e0e0e0; --muted: #888; }
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); height: 100vh; display: flex; }
+
+#preview-area {
+    flex: 1; display: flex; position: relative; overflow: hidden;
+    background-image:
+        linear-gradient(45deg, #222 25%, transparent 25%),
+        linear-gradient(-45deg, #222 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #222 75%),
+        linear-gradient(-45deg, transparent 75%, #222 75%);
+    background-size: 20px 20px;
+    background-position: 0 0, 0 10px, 10px -10px, -10px 0;
+    align-items: center; justify-content: center;
+}
+#preview-area.align-bl, #preview-area.align-br {
+    display: block;
+}
+#preview-container { position: relative; }
+#loading {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    color: var(--muted); font-size: 14px;
+}
+
+#panel {
+    width: 360px; background: var(--panel); border-left: 1px solid var(--border);
+    display: flex; flex-direction: column; overflow-y: auto;
+}
+#panel h1 {
+    font-size: 16px; color: var(--accent); padding: 16px 16px 8px;
+    border-bottom: 1px solid var(--border);
+}
+.section { padding: 12px 16px; border-bottom: 1px solid var(--border); }
+.section-title { font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); margin-bottom: 8px; }
+
+.field { margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+.field label { font-size: 13px; min-width: 90px; color: #bbb; }
+.field select, .field input[type="number"], .field input[type="text"] {
+    flex: 1; padding: 5px 8px; border: 1px solid var(--border); border-radius: 4px;
+    background: #0d0d1a; color: var(--text); font: 13px 'Segoe UI', sans-serif; outline: none;
+}
+.field select:focus, .field input:focus { border-color: var(--accent); }
+.field input[type="number"] { width: 70px; flex: none; }
+.field-hint { font-size: 12px; color: var(--muted); }
+
+.char-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
+.char-btn {
+    padding: 6px; border: 2px solid var(--border); border-radius: 6px;
+    background: transparent; color: var(--text); font: 600 12px 'Segoe UI', sans-serif;
+    cursor: pointer; text-transform: capitalize; transition: all 0.15s;
+}
+.char-btn:hover { border-color: #556; }
+.char-btn.active { border-color: var(--accent); color: var(--accent); background: rgba(255,215,0,0.08); }
+
+.costume-row { display: flex; align-items: center; gap: 8px; }
+.costume-row button {
+    width: 28px; height: 28px; border: 1px solid var(--border); border-radius: 4px;
+    background: #0d0d1a; color: var(--text); font-size: 16px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+}
+.costume-row button:hover { border-color: var(--accent); }
+.costume-row span { font: 600 13px 'Segoe UI', sans-serif; min-width: 60px; text-align: center; }
+
+.placement-tabs { display: flex; gap: 4px; margin-bottom: 10px; }
+.placement-tab {
+    flex: 1; padding: 6px 4px; border: 1px solid var(--border); border-radius: 4px;
+    background: transparent; color: var(--muted); font: 600 11px 'Segoe UI', sans-serif;
+    cursor: pointer; text-align: center; transition: all 0.15s;
+}
+.placement-tab:hover { border-color: #556; color: var(--text); }
+.placement-tab.active { border-color: var(--accent); color: var(--accent); background: rgba(255,215,0,0.08); }
+.placement-opts { display: none; }
+.placement-opts.visible { display: block; }
+
+#code-section { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+#code-section .section-title { display: flex; align-items: center; justify-content: space-between; }
+#copy-btn {
+    padding: 3px 10px; border: 1px solid var(--border); border-radius: 3px;
+    background: transparent; color: var(--accent); font: 600 11px 'Segoe UI', sans-serif;
+    cursor: pointer; text-transform: none; letter-spacing: 0;
+}
+#copy-btn:hover { background: rgba(255,215,0,0.1); }
+#code-output {
+    flex: 1; margin: 0; padding: 12px; background: #0d0d1a; border-radius: 4px;
+    font: 12px/1.6 'Consolas', 'SF Mono', monospace; color: #d4d4d4;
+    overflow: auto; white-space: pre; border: 1px solid var(--border); min-height: 180px;
+    user-select: all;
+}
+</style>
+</head>
+<body>
+
+<div id="preview-area">
+    <div id="preview-container">
+        <div id="loading">Loading...</div>
+    </div>
+</div>
+
+<div id="panel">
+    <h1>Partner Widget</h1>
+
+    <div class="section">
+        <div class="section-title">Character</div>
+        <div class="char-grid" id="char-grid"></div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">Costume</div>
+        <div class="costume-row">
+            <button id="costume-prev">‹</button>
+            <span id="costume-label">0 / ?</span>
+            <button id="costume-next">›</button>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">Base URL</div>
+        <div class="field">
+            <input type="text" id="opt-base-url" value="https://cdn.jsdelivr.net/gh/magicalsalt/maipartner-web@main/" style="flex:1;font-size:12px">
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">Display</div>
+        <div class="field">
+            <label>Width</label>
+            <input type="number" id="opt-width" value="300" min="60" max="1000" step="10">
+            <span class="field-hint">px</span>
+        </div>
+        <div class="field">
+            <label>Clickable</label>
+            <select id="opt-clickable"><option value="true" selected>true</option><option value="false">false</option></select>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">Placement</div>
+        <div class="placement-tabs">
+            <button class="placement-tab active" data-mode="bottom-left">Bottom Left</button>
+            <button class="placement-tab" data-mode="bottom-right">Bottom Right</button>
+            <button class="placement-tab" data-mode="custom">Custom</button>
+        </div>
+        <div id="opts-fixed" class="placement-opts visible">
+            <div class="field">
+                <label>Offset X</label>
+                <input type="number" id="opt-offset-x" value="0" min="-200" max="200" step="4">
+                <span class="field-hint">px</span>
+            </div>
+            <div class="field">
+                <label>Offset Y</label>
+                <input type="number" id="opt-offset-y" value="0" min="-200" max="200" step="4">
+                <span class="field-hint">px</span>
+            </div>
+            <div class="field">
+                <label>Show above</label>
+                <input type="number" id="opt-min-vw" value="768" min="0" max="3840" step="1">
+                <span class="field-hint">px viewport</span>
+            </div>
+        </div>
+        <div id="opts-custom" class="placement-opts">
+            <div class="field">
+                <label>Background</label>
+                <input type="text" id="opt-bg" value="transparent">
+            </div>
+        </div>
+    </div>
+
+    <div class="section" id="code-section">
+        <div class="section-title">
+            <span>Embed Code</span>
+            <button id="copy-btn">Copy</button>
+        </div>
+        <pre id="code-output"></pre>
+    </div>
+</div>
+
+<script type="module">
+import PartnerWidget from './maipartner.js';
+
+const characters = ['ras', 'chiffon', 'salt', 'otohime', 'shama', 'milk'];
+const container = document.getElementById('preview-container');
+const loadingEl = document.getElementById('loading');
+
+let widget = null;
+let config = {
+    character: 'salt',
+    costume: 0,
+    width: 300,
+    clickable: true,
+    placement: 'bottom-left',
+    offsetX: 0,
+    offsetY: 0,
+    minViewport: 768,
+    background: 'transparent',
+    baseUrl: 'https://cdn.jsdelivr.net/gh/magicalsalt/maipartner-web@main/',
+};
+
+// ── Character grid ──
+const charGrid = document.getElementById('char-grid');
+for (const name of characters) {
+    const btn = document.createElement('button');
+    btn.className = 'char-btn' + (name === config.character ? ' active' : '');
+    btn.textContent = name;
+    btn.dataset.char = name;
+    btn.addEventListener('click', () => {
+        config.character = name;
+        config.costume = 0;
+        charGrid.querySelectorAll('.char-btn').forEach(b => b.classList.toggle('active', b.dataset.char === name));
+        rebuild();
+    });
+    charGrid.appendChild(btn);
+}
+
+// ── Costume ──
+const costumeLabel = document.getElementById('costume-label');
+document.getElementById('costume-prev').addEventListener('click', () => {
+    if (!widget) return;
+    config.costume = (config.costume - 1 + widget.numCostumes) % widget.numCostumes;
+    widget.setCostume(config.costume);
+    updateCostumeLabel();
+    updateCode();
+});
+document.getElementById('costume-next').addEventListener('click', () => {
+    if (!widget) return;
+    config.costume = (config.costume + 1) % widget.numCostumes;
+    widget.setCostume(config.costume);
+    updateCostumeLabel();
+    updateCode();
+});
+
+function updateCostumeLabel() {
+    costumeLabel.textContent = widget
+        ? `${config.costume} / ${widget.numCostumes - 1}`
+        : '0 / ?';
+}
+
+// ── Display options ──
+const optWidth = document.getElementById('opt-width');
+const optClickable = document.getElementById('opt-clickable');
+const optOffsetX = document.getElementById('opt-offset-x');
+const optOffsetY = document.getElementById('opt-offset-y');
+const optMinVw = document.getElementById('opt-min-vw');
+const optBg = document.getElementById('opt-bg');
+const optBaseUrl = document.getElementById('opt-base-url');
+
+function readConfig() {
+    config.width = Math.max(60, parseInt(optWidth.value) || 300);
+    config.clickable = optClickable.value === 'true';
+    config.offsetX = parseInt(optOffsetX.value) || 0;
+    config.offsetY = parseInt(optOffsetY.value) || 0;
+    config.minViewport = Math.max(0, parseInt(optMinVw.value) || 0);
+    config.background = optBg.value || 'transparent';
+    config.baseUrl = optBaseUrl.value.trim() || './';
+}
+
+let debounceTimer = null;
+function onWidgetChange() {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => { readConfig(); rebuild(); }, 400);
+}
+function onLayoutChange() {
+    readConfig(); applyPreviewAlignment(); updateCode();
+}
+for (const el of [optWidth]) el.addEventListener('input', onWidgetChange);
+for (const el of [optOffsetX, optOffsetY, optMinVw, optBg, optBaseUrl]) el.addEventListener('input', onLayoutChange);
+optClickable.addEventListener('change', onWidgetChange);
+
+// ── Placement tabs ──
+const placementTabs = document.querySelectorAll('.placement-tab');
+const optsFixed = document.getElementById('opts-fixed');
+const optsCustom = document.getElementById('opts-custom');
+const previewArea = document.getElementById('preview-area');
+
+function applyPreviewAlignment() {
+    previewArea.classList.remove('align-bl', 'align-br');
+    previewArea.style.padding = '';
+    if (config.placement === 'bottom-left') {
+        previewArea.classList.add('align-bl');
+        container.style.cssText = `position:absolute;bottom:${config.offsetY}px;left:${config.offsetX}px`;
+    } else if (config.placement === 'bottom-right') {
+        previewArea.classList.add('align-br');
+        container.style.cssText = `position:absolute;bottom:${config.offsetY}px;right:${config.offsetX}px`;
+    } else {
+        container.style.cssText = 'position:relative';
+    }
+}
+
+placementTabs.forEach(tab => tab.addEventListener('click', () => {
+    config.placement = tab.dataset.mode;
+    placementTabs.forEach(t => t.classList.toggle('active', t === tab));
+    optsFixed.classList.toggle('visible', config.placement !== 'custom');
+    optsCustom.classList.toggle('visible', config.placement === 'custom');
+    applyPreviewAlignment();
+    updateCode();
+}));
+applyPreviewAlignment();
+
+// ── Rebuild widget ──
+let buildToken = 0;
+let prevWidget = null;
+async function rebuild() {
+    const token = ++buildToken;
+    readConfig();
+    updateCode();
+
+    if (widget) {
+        if (prevWidget) prevWidget.destroy();
+        prevWidget = widget;
+        widget = null;
+    }
+    if (!prevWidget) loadingEl.style.display = 'flex';
+
+    try {
+        const w = new PartnerWidget({
+            character: config.character,
+            container,
+            costume: config.costume,
+            width: config.width,
+            clickable: config.clickable,
+            autoStart: false,
+            background: config.placement === 'custom' ? config.background : 'transparent',
+        });
+        await w.init();
+        if (token !== buildToken) { w.destroy(); return; }
+        loadingEl.style.display = 'none';
+        w.start();
+        if (prevWidget) { prevWidget.destroy(); prevWidget = null; }
+        widget = w;
+        updateCostumeLabel();
+        updateCode();
+    } catch (err) {
+        if (token !== buildToken) return;
+        if (prevWidget) { prevWidget.destroy(); prevWidget = null; }
+        loadingEl.textContent = 'Error: ' + err.message;
+        loadingEl.style.display = 'flex';
+        console.error(err);
+    }
+}
+
+// ── Code snippet ──
+const codeOutput = document.getElementById('code-output');
+
+function updateCode() {
+    const isFixed = config.placement !== 'custom';
+    const side = config.placement === 'bottom-right' ? 'right' : 'left';
+    const base = config.baseUrl.replace(/\/+$/, '');
+    const jsUrl = base + '/maipartner.js';
+
+    const widgetOpts = [];
+    widgetOpts.push(`    character: '${config.character}',`);
+    widgetOpts.push(`    container: document.getElementById('mai-partner'),`);
+    widgetOpts.push(`    basePath:  '${base}',`);
+    if (config.costume !== 0)
+        widgetOpts.push(`    costume:   ${config.costume},`);
+    widgetOpts.push(`    width:     ${config.width},`);
+    if (!config.clickable)
+        widgetOpts.push(`    clickable: false,`);
+    if (!isFixed && config.background !== 'transparent')
+        widgetOpts.push(`    background: '${config.background}',`);
+
+    let snippet;
+    if (isFixed) {
+        const style = `position:fixed;bottom:${config.offsetY}px;${side}:${config.offsetX}px;z-index:9999`;
+        const media = config.minViewport > 0
+            ? `\n<style>@media(max-width:${config.minViewport}px){#mai-partner{display:none!important}}</style>`
+            : '';
+        snippet =
+`<div id="mai-partner" style="${style}"></div>${media}
+<script type="module">
+import PartnerWidget from '${jsUrl}';
+const widget = new PartnerWidget({
+${widgetOpts.join('\n')}
+});
+await widget.init();
+<\/script>`;
+    } else {
+        snippet =
+`<div id="mai-partner"></div>
+<script type="module">
+import PartnerWidget from '${jsUrl}';
+const widget = new PartnerWidget({
+${widgetOpts.join('\n')}
+});
+await widget.init();
+<\/script>`;
+    }
+
+    codeOutput.textContent = snippet;
+}
+
+document.getElementById('copy-btn').addEventListener('click', () => {
+    navigator.clipboard.writeText(codeOutput.textContent).then(() => {
+        const btn = document.getElementById('copy-btn');
+        btn.textContent = 'Copied!';
+        setTimeout(() => { btn.textContent = 'Copy'; }, 1500);
+    });
+});
+
+// ── Initial load ──
+rebuild();
+</script>
+</body>
+</html>
