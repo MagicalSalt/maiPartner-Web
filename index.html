@@ -182,7 +182,7 @@ body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); co
 </div>
 
 <script type="module">
-import PartnerWidget from './maipartner.js';
+import PartnerWidget from './maipartner.min.js';
 
 const characters = ['ras', 'chiffon', 'salt', 'otohime', 'shama', 'milk'];
 const container = document.getElementById('preview-container');
@@ -351,7 +351,7 @@ function updateCode() {
     const isFixed = config.placement !== 'custom';
     const side = config.placement === 'bottom-right' ? 'right' : 'left';
     const base = config.baseUrl.replace(/\/+$/, '');
-    const jsUrl = base + '/maipartner.js';
+    const jsUrl = base + '/maipartner.min.js';
 
     const widgetOpts = [];
     widgetOpts.push(`    character: '${config.character}',`);
